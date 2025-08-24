@@ -33,17 +33,42 @@ class Agent:
         pacman_inky_euc_dist = sqrt((pacman_position[0]-inky_position[0])**2 + (pacman_position[1] - inky_position[1])**2)
         pacman_clyde_euc_dist = sqrt((pacman_position[0]-clyde_position[0])**2 + (pacman_position[1] - clyde_position[1])**2)
         
-        safety_score_list = []
-        ghosts_positions = [blinky_position, pinky_position, inky_position, clyde_position]
-        for direction in valid_directions_mask:
-            for ghost in ghosts_positions:
+        safety_score_list = [0., 0., 0., 0.]
+        for index, direction in enumerate(valid_directions_mask):
 
+            if direction == 0:
+                continue
+
+            pacman_new_position = [pacman_position[0], pacman_position[1]]
+            if index == 0:
+                pacman_new_position[0] += 30
+            elif index == 1:
+                pacman_new_position[0] -= 30
+            elif index == 2:
+                pacman_new_position[1] -= 30
+            else:
+                pacman_new_position[1] += 30
+
+            pacman_blinky_euc_dist_new = sqrt((pacman_new_position[0]-blinky_position[0])**2 + (pacman_new_position[1] - blinky_position[1])**2)
+            pacman_pinky_euc_dist_new = sqrt((pacman_new_position[0]-pinky_position[0])**2 + (pacman_new_position[1] - pinky_position[1])**2)
+            pacman_inky_euc_dist_new = sqrt((pacman_new_position[0]-inky_position[0])**2 + (pacman_new_position[1] - inky_position[1])**2)
+            pacman_clyde_euc_dist_new = sqrt((pacman_new_position[0]-clyde_position[0])**2 + (pacman_new_position[1] - clyde_position[1])**2)
+
+            safety_score_blinky = pacman_blinky_euc_dist_new - pacman_blinky_euc_dist
+            safety_score_pinky = pacman_pinky_euc_dist_new - pacman_pinky_euc_dist
+            safety_score_inky = pacman_inky_euc_dist_new - pacman_inky_euc_dist
+            safety_score_clyde = pacman_clyde_euc_dist_new - pacman_clyde_euc_dist
+            
+            safety_score = (min(safety_score_blinky, safety_score_pinky, safety_score_inky, safety_score_clyde) + 30) /60
+
+            safety_score_list[index] = safety_score
 
         food_grid = self.get_food_grid(pacman_position, game.block_list)
+        flattened_food_grid = [cell for row in food_grid for cell in row]
 
-        state = [
-            
-        ]
+        state = valid_directions_mask + safety_score_list + flattened_food_grid
+
+        return state
 
     def get_food_grid(self, pacman_pos, block_list) -> List[[]]:
         grid = [[0 for _ in range(5)] for _ in range(5)]
